@@ -1,0 +1,67 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+package-lock.json
+
+# Environment variables and secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Hardhat/Ethereum development
+cache/
+artifacts/
+typechain/
+typechain-types/
+coverage/
+coverage.json
+
+# Build outputs
+dist/
+build/
+
+# Local deployments
+deployments/localhost/
+.openzeppelin/unknown-*.json
+
+# IDE specific files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.vscode/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing
+.coverage_artifacts/
+.coverage_cache/
+.coverage_contracts/
+coverage/
+coverageEnv/
+
+# Logs
+logs/
+*.log
+
+# Hardhat plugins
+flatten/
+
+# Misc
+.notes.md
+.history
+*.tgz
+.tmp-*/ 
