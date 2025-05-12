@@ -5,13 +5,13 @@ pragma solidity ^0.8.0;
     TicketToken is an ERC-20 based ticket system.
     
     Roles:
-      - Contract Deployer: Deploys the contract.
-      - Vendor: Receives ETH when tickets are bought and is the only address that can receive returned ticket tokens.
-      - Attendee: Buys a ticket by sending ETH; receives a ticket token. They can later return it (transfer token) to the vendor.
+      - Contract Deployer: Deploys the contract and receives ETH from ticket sales.
+      - Vendor: Is the only address that can receive returned ticket tokens.
+      - Attendee: Buys tickets by sending ETH; receives ticket tokens from the contract's supply. They can later return it (transfer token) to the vendor.
       
     Behavior:
-      - buyTicket(): When an attendee sends ETH (minimum of ticketPrice) to buy a ticket,
-          the contract mints 1 ticket token to the sender and forwards the received ETH to the vendor.
+      - buyTicket(uint256 _amount): When an attendee sends ETH (minimum of _amount * ticketPrice) to buy tickets,
+          the contract transfers _amount ticket tokens from its own supply to the sender and forwards the received ETH to the deployer.
       - transfer(): The standard ERC-20 transfer is overridden so that tokens can only be transferred
           if the recipient is the vendor.
 */
@@ -21,10 +21,12 @@ contract TicketToken {
     string public name;
     string public symbol;
     uint8 public decimals;
-    uint256 public totalSupply;
+    uint256 public totalSupply; // Note: This still represents the total ever created, not current circulating supply outside the contract
     
-    // Vendor receives ETH when a ticket is bought
+    // Vendor receives returned tickets
     address payable public vendor;
+    // Deployer receives ETH from ticket sales
+    address payable public deployer;
     // Ticket price (in wei)
     uint256 public ticketPrice;
     
@@ -48,27 +50,40 @@ contract TicketToken {
         name = _name;
         symbol = _symbol;
         decimals = _decimals;
+        // Total supply remains the same concept (total tokens created)
         totalSupply = _initialSupply * (10 ** uint256(decimals));
-        balanceOf[msg.sender] = totalSupply;
+        // Assign the initial supply to the contract's address
+        balanceOf[address(this)] = totalSupply;
         ticketPrice = _ticketPrice;
         vendor = payable(_vendor);
+        deployer = payable(msg.sender); // Save the deployer address
+        // Emit the initial transfer event to show tokens moving to the contract
+        emit Transfer(address(0), address(this), totalSupply);
     }
     
-    // Simple buyTicket function that accepts ETH and forwards it to the vendor
-    function buyTicket() external payable returns (bool success) {
-        require(msg.value >= ticketPrice, "Insufficient ETH sent for ticket.");
+    /**
+     * @notice Allows users to buy a specified number of tickets.
+     * @param _amount The number of tickets to purchase.
+     * @return success Boolean indicating if the purchase was successful.
+     */
+    function buyTicket(uint256 _amount) external payable returns (bool success) {
+        require(_amount > 0, "Must purchase at least one ticket.");
+        uint256 totalCost = _amount * ticketPrice;
+        require(msg.value >= totalCost, "Insufficient ETH sent for the requested number of tickets.");
+        require(balanceOf[address(this)] >= _amount, "Not enough tickets available in contract supply.");
         
-        // Mint one ticket token to the buyer
-        uint256 tokensToMint = 1;
-        totalSupply += tokensToMint;
-        balanceOf[msg.sender] += tokensToMint;
+        // Transfer tokens from contract supply to the buyer
+        balanceOf[address(this)] -= _amount;
+        balanceOf[msg.sender] += _amount;
         
-        emit Transfer(address(0), msg.sender, tokensToMint);
-        emit TicketPurchased(msg.sender, tokensToMint, msg.value);
+        // Emit standard Transfer event for token movement
+        emit Transfer(address(this), msg.sender, _amount);
+        // Emit custom event for purchase details
+        emit TicketPurchased(msg.sender, _amount, msg.value);
         
-        // Forward ETH to vendor
-        (bool sent, ) = vendor.call{value: msg.value}("");
-        require(sent, "Failed to forward ETH to vendor");
+        // Forward ETH to deployer instead of vendor
+        (bool sent, ) = deployer.call{value: msg.value}("");
+        require(sent, "Failed to forward ETH to deployer");
         
         return true;
     }
@@ -88,9 +103,10 @@ contract TicketToken {
     // For debugging: Withdraw any funds stuck in the contract
     function withdraw() external {
         require(msg.sender == vendor, "Only vendor can withdraw");
-        vendor.transfer(address(this).balance);
+        (bool sent, ) = vendor.call{value: address(this).balance}("");
+        require(sent, "ETH withdrawal failed");
     }
 
-    // This function allows the contract to receive ETH
+    // This function allows the contract to receive ETH (e.g., for the withdraw test)
     receive() external payable {}
 }

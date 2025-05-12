@@ -8,7 +8,7 @@ async function main() {
   // Set deployment parameters
   const name = "TiernanTicketToken";
   const symbol = "TTT";
-  const decimals = 18;
+  const decimals = 0;  // Changed to 0 for whole tickets
   const initialSupply = 1000;
   const ticketPrice = ethers.parseEther("0.01"); // 0.01 ETH per ticket
   const [deployer] = await ethers.getSigners();
@@ -18,6 +18,7 @@ async function main() {
 
   console.log("Deploying contract with the account:", deployer.address);
   console.log("Setting vendor address to:", vendor);
+  console.log("Initial supply of tickets:", initialSupply, "(to be held by the contract itself)");
   
   const ticketToken = await TicketToken.deploy(name, symbol, decimals, initialSupply, ticketPrice, vendor);
   // Wait until the contract is deployed
