@@ -1,0 +1,28 @@
+{
+  "name": "blockchain-project",
+  "version": "1.0.0",
+  "description": "This project implements a simple ticketing system DApp using Ethereum's Sepolia Testnet. It consists of:\r - A smart contract (TicketToken.sol) that extends the ERC‑20 standard with a payable function to purchase tickets using SETH.\r - A Web3 frontend built with HTML, CSS, and JavaScript for wallet creation, balance checking, ticket purchase, and transferring tickets.",
+  "main": "index.js",
+  "scripts": {
+    "test": "hardhat test",
+    "test:frontend": "jest",
+    "test:all": "npm run test && npm run test:frontend"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.8",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "chai": "^4.5.0",
+    "ethers": "^6.13.5",
+    "hardhat": "^2.22.19",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "jquery": "^3.7.1",
+    "solidity-coverage": "^0.8.14"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7"
+  }
+}

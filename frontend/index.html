@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ticketing DApp</title>
+  <!-- Link to your CSS file -->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Include Web3.js and jQuery libraries -->
+  <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+  <!-- Left Navigation Menu -->
+  <div class="menu">
+    <ul>
+      <li><a href="#" onclick="openTab(event, 'createWallet')">Create Wallet</a></li>
+      <li><a href="#" onclick="openTab(event, 'checkBalance')">Check Balance</a></li>
+      <li><a href="#" onclick="openTab(event, 'buyTicket')">Buy Ticket</a></li>
+      <li><a href="#" onclick="openTab(event, 'transferTicket')">Transfer Ticket</a></li>
+      <li><a href="#" onclick="openTab(event, 'instructions')">Instructions</a></li>
+    </ul>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="content">
+    <!-- Create Wallet Tab -->
+    <div id="createWallet" class="tabcontent active">
+      <h2>Create Wallet</h2>
+      <input type="password" id="walletPassword" placeholder="Enter wallet password">
+      <button id="createWalletBtn">Create Wallet</button>
+      <br/><br/>
+      <label>Wallet Address:</label>
+      <textarea id="walletAddress" readonly rows="5"></textarea>
+      <br/>
+      <label>Private Key:</label>
+      <textarea id="walletPrivateKey" readonly rows="5"></textarea>
+      <br/>
+      <label>Keystore JSON:</label>
+      <textarea id="walletKeystore" readonly rows="15"></textarea>
+      <br/>
+      <a id="downloadKeystore" href="#" download="wallet.json">Download Keystore</a>
+    </div>
+    
+    <!-- Check Balance Tab -->
+    <div id="checkBalance" class="tabcontent">
+      <h2>Check Balance</h2>
+      <label>Enter Wallet Address:</label>
+      <input type="text" id="balanceWalletAddress" placeholder="0x...">
+      <button id="checkBalanceBtn">Check Balance</button>
+      <br/><br/>
+      <label>Crypto Balance (ETH):</label>
+      <span id="cryptoBalance"></span>
+      <br/><br/>
+      <label>Ticket Token Balance:</label>
+      <span id="tokenBalance"></span>
+      <br/><br/>
+      <label>Token Name:</label>
+      <span id="tokenName"></span>
+      <br/><br/>
+      <label>Ticket Price (ETH):</label>
+      <span id="ticketPrice"></span>
+    </div>
+    
+    <!-- Buy Ticket Tab -->
+    <div id="buyTicket" class="tabcontent">
+      <h2>Buy Ticket</h2>
+      <p>Load your wallet to proceed:</p>
+      <input type="password" id="buyWalletPassword" placeholder="Enter wallet password">
+      <input type="file" id="buyKeystoreFile" accept=".json">
+      <button id="loadBuyWalletBtn">Load Wallet</button>
+      <br/><br/>
+      <label>Wallet Address:</label>
+      <input type="text" id="buyWalletAddress" readonly>
+      <input type="hidden" id="buyPrivateKey">
+      <br/><br/>
+      <label>Enter Number of Tickets to Buy:</label>
+      <input type="number" id="numTicketsToBuy" placeholder="e.g., 1" step="1" min="1">
+      <button id="buyTicketBtn">Buy Ticket</button>
+      <button id="debugContractBtn" style="background-color: #6c757d;">Debug Contract Status</button>
+      <br/><br/>
+      <label>Transaction Request:</label>
+      <textarea id="buyTxRequest" readonly rows="8"></textarea>
+      <br/><br/>
+      <label>Transaction Receipt:</label>
+      <textarea id="buyTxReceipt" readonly rows="30"></textarea>
+    </div>
+    
+    <!-- Transfer Ticket Tab - Updated Layout -->
+    <div id="transferTicket" class="tabcontent">
+      <h2>Transfer Ticket to Vendor</h2>
+      <p>Load your wallet to transfer tickets:</p>
+      <input type="password" id="transferWalletPassword" placeholder="Enter wallet password">
+      <input type="file" id="transferKeystoreFile" accept=".json">
+      <button id="loadTransferWalletBtn">Load Wallet</button>
+      <br/><br/>
+      <label>Wallet Address:</label>
+      <input type="text" id="transferWalletAddress" readonly>
+      <input type="hidden" id="transferPrivateKey">
+      <br/><br/>
+      <label>Enter Number of Tickets to Transfer:</label>
+      <input type="number" id="transferAmount" placeholder="Ticket amount" step="1">
+      <button id="transferTicketBtn">Transfer Ticket</button>
+      <br/><br/>
+      
+      <!-- Moved doorman verification to be above transaction request -->
+      <div id="doormanVerification" class="mt-4 p-3 border rounded d-none">
+        <h5>Doorman Verification</h5>
+        <div id="doormanStatus" class="alert mt-2"></div>
+      </div>
+      <br/>
+      
+      <label>Transaction Request:</label>
+      <!-- Made transaction request box smaller -->
+      <textarea id="transferTxRequest" readonly rows="8"></textarea>
+      <br/><br/>
+      <label>Transaction Receipt:</label>
+      <!-- Made transaction receipt box larger -->
+      <textarea id="transferTxReceipt" readonly rows="30"></textarea>
+    </div>
+    
+    <!-- Instructions Tab -->
+    <div id="instructions" class="tabcontent">
+      <h2>About This Ticketing System</h2>
+      <p>
+        <strong>Roles:</strong>
+      </p>
+      <ul>
+        <li><strong>Contract Deployer:</strong> Deploys the smart contract and sets initial parameters.</li>
+        <li><strong>Vendor:</strong> Receives ETH when a ticket is purchased and collects returned ticket tokens.</li>
+        <li><strong>Attendee:</strong> Buys tickets by sending ETH and receives a token as proof; can return the token (i.e., the ticket) to the vendor.</li>
+      </ul>
+      <p>
+        When you buy a ticket, you must send at least 0.01 ETH (as defined by the ticket price). The ETH is forwarded automatically to the vendor's wallet, and you receive 1 ticket token. When returning the ticket, you transfer the token back to the vendor.
+      </p>
+      <p>
+        Please ensure you use the proper wallet for each role: the deployer and/or vendor wallet must be correctly set in the contract and your front end.
+      </p>
+    </div>
+    
+    <!-- Debug Messages Section -->
+    <div id="debugMessages" style="background:#eee; border:1px solid #ccc; padding:10px; margin-top:20px;">
+      <h3>Debug Messages:</h3>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal">
+      <div class="modal-content">
+        <span id="closeModal" class="close">&times;</span>
+        <p id="errorMessage"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Include your app.js file -->
+  <script src="js/app.js"></script>
+</body>
+</html>
